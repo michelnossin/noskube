@@ -5,18 +5,20 @@ from ui.events.cluster_event_handler import ClusterEventHandler
 
 from ui.forms.items.context_selector import ContextSelector
 from ui.forms.items.cluster_selector import ClusterSelector
+from ui.forms.items.namespace_selector import NamespaceSelector
 from ui.forms.items.status_box import StatusBox
+
 
 class MainForm(npyscreen.FormBaseNew):
 
     def configure_event_handler(self, event, kubernetes_api):
-            if event == "change_context":
-                self.add_event_hander(event,
-                                      ContextEventHandler(self,
-                                                          event,
-                                                          kubernetes_api)
-                                      .proces_event)
-                return
+        if event == "change_context":
+            self.add_event_hander(event,
+                                  ContextEventHandler(self,
+                                                      event,
+                                                      kubernetes_api)
+                                  .proces_event)
+            return
             if event == "change_cluster":
                 self.add_event_hander(event,
                                       ClusterEventHandler(self,
@@ -26,7 +28,7 @@ class MainForm(npyscreen.FormBaseNew):
                 return
 
             raise NotImplementedError("""
-            An invalid event type was being configured: 
+            An invalid event type was being configured:
             """ + event)
 
     def read_kubernetes_data(self):
@@ -35,10 +37,12 @@ class MainForm(npyscreen.FormBaseNew):
         self.current_context, self.current_context_id = (
             kubernetes_api.current_context)
         self.all_contexts = kubernetes_api.all_contexts
-
         self.current_cluster, self.current_cluster_id = (
             kubernetes_api.current_cluster)
         self.all_clusters = kubernetes_api.all_clusters
+        self.all_pods = kubernetes_api.all_pods
+        self.all_deployments = kubernetes_api.all_deployments
+        self.all_namespaces = kubernetes_api.all_namespaces
 
     def add_form_components(self):
         y, x = self.useable_space()
@@ -57,11 +61,21 @@ class MainForm(npyscreen.FormBaseNew):
                                          values=self.all_clusters,
                                          scroll_exit=True)
 
+        self.namespace_selector = self.add(NamespaceSelector,
+                                           max_height=8,
+                                           value=[self.current_namespace_id, ],
+                                           name="Namespace",
+                                           values=self.all_namespaces,
+                                           scroll_exit=True)
+
         self.status_box = self.add(StatusBox,
                                    footer="No editable",
                                    editable=False)
 
+        # self.update_status_box(str(self.all_pods))
+
     def create(self):
+        self.current_namespace_id = 0
 
         events = ["change_context", "change_cluster"]
         for event in events:
@@ -82,6 +96,19 @@ class MainForm(npyscreen.FormBaseNew):
         self.cluster_selector.value = [self.current_cluster_id]
 
         self.cluster_selector.display()
+
+    def update_namespace_selector(self,
+                                  all_namespaces,
+                                  current_namespace,
+                                  current_namespace_id):
+        self.all_namespaces = all_namespaces
+        self.current_namespace = current_namespace
+        self.current_namespace_id = current_namespace_id
+
+        self.namespace_selector.values = self.all_namespaces
+        self.namespace_selector.value = [self.current_namespace_id]
+
+        self.namespace_selector.display()
 
     def update_status_box(self, value):
         self.status_box.value = value

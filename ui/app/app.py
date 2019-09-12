@@ -2,6 +2,7 @@ import npyscreen
 
 from ui.forms.main_form import MainForm
 
+
 class App(npyscreen.StandardApp):
     def __init__(self, kubernetes_api):
         super().__init__()
@@ -12,4 +13,3 @@ class App(npyscreen.StandardApp):
 
     def onStart(self):
         self.addForm("MAIN", MainForm, name="NosKube Professional Edition")
-

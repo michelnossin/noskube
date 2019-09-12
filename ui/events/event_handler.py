@@ -1,5 +1,6 @@
 import abc
 
+
 class EventHandler():
     def __init__(self, caller, event, kubernetes_api):
         self.event = event
