@@ -12,4 +12,5 @@ class App(npyscreen.StandardApp):
         self.kubernetes_api = kubernetes_api
 
     def onStart(self):
-        self.addForm("MAIN", MainForm, name="NosKube Professional Edition")
+        self.addForm("MAIN", MainForm, name="NosKube Professional Edition",
+                     lines=70)

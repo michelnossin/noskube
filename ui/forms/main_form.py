@@ -1,4 +1,5 @@
 import npyscreen
+import curses
 
 from ui.events.context_event_handler import ContextEventHandler
 from ui.events.cluster_event_handler import ClusterEventHandler
@@ -6,6 +7,9 @@ from ui.events.cluster_event_handler import ClusterEventHandler
 from ui.forms.items.context_selector import ContextSelector
 from ui.forms.items.cluster_selector import ClusterSelector
 from ui.forms.items.namespace_selector import NamespaceSelector
+from ui.forms.items.main_button import MainButton
+from ui.forms.items.pod_button import PodButton
+from ui.forms.items.service_button import ServiceButton
 from ui.forms.items.status_box import StatusBox
 
 
@@ -68,14 +72,31 @@ class MainForm(npyscreen.FormBaseNew):
                                            values=self.all_namespaces,
                                            scroll_exit=True)
 
-        self.status_box = self.add(StatusBox,
-                                   footer="No editable",
-                                   editable=False)
+        x = self.nextrelx
+        y = self.nextrely = self.nextrely + 2
+        self.main_button = self.add(MainButton, name="MAIN CONFIGURATION")
+        self.nextrely = y
+        self.nextrelx = self.nextrelx + self.main_button.width
+        self.pod_button = self.add(PodButton, name="POD CONTROL")
+        self.nextrely = y
+        self.nextrelx = self.nextrelx + self.main_button.width
+        self.service_button = self.add(ServiceButton, name="SERVICE HUB")
+        self.nextrelx = x
+        self.nextrely = self.nextrely + 2
 
-        # self.update_status_box(str(self.all_pods))
+        self.status_box = self.add(StatusBox,
+                                   max_height=30,
+                                   footer="By Michel Nossin",
+                                   editable=False,
+                                   name="NosKube output",
+                                   value="""
+        Use TAB and SHIFT-TAB to browse components.
+        Use Cursor keys to move inside a component.
+        Press ENTER to select an item""")
 
     def create(self):
         self.current_namespace_id = 0
+        self.current_form_id = 'MAIN CONFIGURATION'
 
         events = ["change_context", "change_cluster"]
         for event in events:
