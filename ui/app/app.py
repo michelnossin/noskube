@@ -1,6 +1,7 @@
 import npyscreen
 
 from ui.forms.main_form import MainForm
+import constants as c
 
 
 class App(npyscreen.StandardApp):
@@ -13,4 +14,4 @@ class App(npyscreen.StandardApp):
 
     def onStart(self):
         self.addForm("MAIN", MainForm, name="NosKube Professional Edition",
-                     lines=70)
+                     lines=c.Y_ROWS_FULL)

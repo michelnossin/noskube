@@ -1,8 +1,10 @@
 import npyscreen
-import curses
 
 from ui.events.context_event_handler import ContextEventHandler
 from ui.events.cluster_event_handler import ClusterEventHandler
+from ui.events.mainmenu_event_handler import MainMenuEventHandler
+from ui.events.podmenu_event_handler import PodMenuEventHandler
+from ui.events.servicemenu_event_handler import ServiceMenuEventHandler
 
 from ui.forms.items.context_selector import ContextSelector
 from ui.forms.items.cluster_selector import ClusterSelector
@@ -12,28 +14,25 @@ from ui.forms.items.pod_button import PodButton
 from ui.forms.items.service_button import ServiceButton
 from ui.forms.items.status_box import StatusBox
 
+import constants as c
 
-class MainForm(npyscreen.FormBaseNew):
 
-    def configure_event_handler(self, event, kubernetes_api):
-        if event == "change_context":
-            self.add_event_hander(event,
-                                  ContextEventHandler(self,
-                                                      event,
-                                                      kubernetes_api)
-                                  .proces_event)
-            return
-            if event == "change_cluster":
-                self.add_event_hander(event,
-                                      ClusterEventHandler(self,
-                                                          event,
-                                                          kubernetes_api)
+class MainForm(npyscreen.SplitForm):
+
+    def configure_event_handler(self, kubernetes_api):
+        event_handlers = [{"e": "change_context", "h": ContextEventHandler},
+                          {"e": "change_cluster", "h": ClusterEventHandler},
+                          {"e": "main_menu", "h": MainMenuEventHandler},
+                          {"e": "pod_menu", "h": PodMenuEventHandler},
+                          {"e": "service_menu", "h": ServiceMenuEventHandler}
+                          ]
+
+        for event_handler in event_handlers:
+                self.add_event_hander(event_handler["e"],
+                                      event_handler["h"](self,
+                                                         event_handler["e"],
+                                                         kubernetes_api)
                                       .proces_event)
-                return
-
-            raise NotImplementedError("""
-            An invalid event type was being configured:
-            """ + event)
 
     def read_kubernetes_data(self):
         kubernetes_api = self.parentApp.kubernetes_api
@@ -48,44 +47,59 @@ class MainForm(npyscreen.FormBaseNew):
         self.all_deployments = kubernetes_api.all_deployments
         self.all_namespaces = kubernetes_api.all_namespaces
 
+    def add_horizontal_menu(self):
+        def get_menu_color(button_name):
+            if self.current_form_id == button_name:
+                return 'VERYGOOD'
+            else:
+                return 'CAUTIONHL'
+
+        x = self.nextrelx
+        y = self.nextrely = self.nextrely + 2
+
+        buttons = [{"name": "MAIN CONFIGURATION", "btn": MainButton},
+                   {"name": "POD CONTROL", "btn": PodButton},
+                   {"name": "SERVICE HUB", "btn": ServiceButton}]
+
+        for button in buttons:
+            bt = self.add(button["btn"],
+                          name=button["name"],
+                          color=get_menu_color(button["name"]))
+            self.nextrely = y
+            self.nextrelx = self.nextrelx + bt.width
+
+        self.nextrelx = x
+        self.nextrely = self.nextrely + 2
+
     def add_form_components(self):
         y, x = self.useable_space()
 
+        self.add_horizontal_menu()
+
         self.context_selector = self.add(ContextSelector,
-                                         max_height=8,
+                                         max_height=c.Y_MAX_SELECTOR,
                                          value=[self.current_context_id, ],
                                          name="Context",
                                          values=self.all_contexts,
                                          scroll_exit=True)
 
         self.cluster_selector = self.add(ClusterSelector,
-                                         max_height=8,
+                                         max_height=c.Y_MAX_SELECTOR,
                                          value=[self.current_cluster_id, ],
                                          name="Cluster",
                                          values=self.all_clusters,
                                          scroll_exit=True)
 
         self.namespace_selector = self.add(NamespaceSelector,
-                                           max_height=8,
+                                           max_height=c.Y_MAX_SELECTOR,
                                            value=[self.current_namespace_id, ],
                                            name="Namespace",
                                            values=self.all_namespaces,
                                            scroll_exit=True)
 
-        x = self.nextrelx
-        y = self.nextrely = self.nextrely + 2
-        self.main_button = self.add(MainButton, name="MAIN CONFIGURATION")
-        self.nextrely = y
-        self.nextrelx = self.nextrelx + self.main_button.width
-        self.pod_button = self.add(PodButton, name="POD CONTROL")
-        self.nextrely = y
-        self.nextrelx = self.nextrelx + self.main_button.width
-        self.service_button = self.add(ServiceButton, name="SERVICE HUB")
-        self.nextrelx = x
-        self.nextrely = self.nextrely + 2
-
+        self.nextrely = c.Y_POS_HALF_WAY
         self.status_box = self.add(StatusBox,
-                                   max_height=30,
+                                   max_height=c.Y_MAX_STATUSBOX,
                                    footer="By Michel Nossin",
                                    editable=False,
                                    name="NosKube output",
@@ -98,9 +112,7 @@ class MainForm(npyscreen.FormBaseNew):
         self.current_namespace_id = 0
         self.current_form_id = 'MAIN CONFIGURATION'
 
-        events = ["change_context", "change_cluster"]
-        for event in events:
-            self.configure_event_handler(event, self.parentApp.kubernetes_api)
+        self.configure_event_handler(self.parentApp.kubernetes_api)
 
         self.read_kubernetes_data()
         self.add_form_components()
