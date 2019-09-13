@@ -19,6 +19,14 @@ import constants as c
 
 class MainForm(npyscreen.SplitForm):
 
+    @property
+    def current_form_id(self):
+        return self.form_id
+
+    @current_form_id.setter
+    def current_form_id(self, form_id):
+        self.form_id = form_id
+
     def configure_event_handler(self, kubernetes_api):
         event_handlers = [{"e": "change_context", "h": ContextEventHandler},
                           {"e": "change_cluster", "h": ClusterEventHandler},
@@ -47,12 +55,14 @@ class MainForm(npyscreen.SplitForm):
         self.all_deployments = kubernetes_api.all_deployments
         self.all_namespaces = kubernetes_api.all_namespaces
 
+    def get_menu_item_color(self, button_name):
+        if self.current_form_id == button_name:
+            return 'VERYGOOD'
+        else:
+            return 'CAUTIONHL'
+
     def add_horizontal_menu(self):
-        def get_menu_color(button_name):
-            if self.current_form_id == button_name:
-                return 'VERYGOOD'
-            else:
-                return 'CAUTIONHL'
+        self.menu_buttons = []
 
         x = self.nextrelx
         y = self.nextrely = self.nextrely + 2
@@ -64,12 +74,18 @@ class MainForm(npyscreen.SplitForm):
         for button in buttons:
             bt = self.add(button["btn"],
                           name=button["name"],
-                          color=get_menu_color(button["name"]))
+                          color=self.get_menu_item_color(button["name"]))
+            self.menu_buttons.append(bt)
             self.nextrely = y
             self.nextrelx = self.nextrelx + bt.width
 
         self.nextrelx = x
         self.nextrely = self.nextrely + 2
+
+    def refresh_menu(self):
+        for btn in self.menu_buttons:
+            btn.color = self.get_menu_item_color(btn.name)
+            btn.display()
 
     def add_form_components(self):
         y, x = self.useable_space()
