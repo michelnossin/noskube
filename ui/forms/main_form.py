@@ -23,29 +23,42 @@ class MainForm(NosKubeForm):
     def add_form_page(self):
         self.context_selector = self.add(ContextSelector,
                                          max_height=c.Y_MAX_SELECTOR,
-                                         value=[self.current_context_id, ],
+                                         value=[self
+                                                .parentApp
+                                                .current_context_id, ],
                                          name="Context",
-                                         values=self.all_contexts,
+                                         values=self
+                                         .parentApp
+                                         .kubernetes_api
+                                         .all_contexts,
                                          scroll_exit=True)
 
         self.cluster_selector = self.add(ClusterSelector,
                                          max_height=c.Y_MAX_SELECTOR,
-                                         value=[self.current_cluster_id, ],
+                                         value=[self
+                                                .parentApp
+                                                .current_cluster_id, ],
                                          name="Cluster",
-                                         values=self.all_clusters,
+                                         values=self
+                                         .parentApp
+                                         .kubernetes_api
+                                         .all_clusters,
                                          scroll_exit=True)
 
         self.namespace_selector = self.add(NamespaceSelector,
                                            max_height=c.Y_MAX_SELECTOR,
-                                           value=[self.current_namespace_id, ],
+                                           value=[self
+                                                  .parentApp
+                                                  .current_namespace_id, ],
                                            name="Namespace",
-                                           values=self.all_namespaces,
+                                           values=self
+                                           .parentApp
+                                           .kubernetes_api
+                                           .all_namespaces,
                                            scroll_exit=True)
 
     def create(self):
         self.configure_event_handler(self.parentApp.kubernetes_api)
-
-        self.current_namespace_id = 0
         self.current_form_id = 'MAIN CONFIGURATION'
 
         super().create()
@@ -54,12 +67,17 @@ class MainForm(NosKubeForm):
                                 all_clusters,
                                 current_cluster,
                                 current_cluster_id):
-        self.all_clusters = all_clusters
-        self.current_cluster = current_cluster
-        self.current_cluster_id = current_cluster_id
+        self.parentApp.current_cluster,
+        self.parentApp.current_cluster_id = (self
+                                             .parentApp
+                                             .kubernetes_api
+                                             .current_cluster)
 
-        self.cluster_selector.values = self.all_clusters
-        self.cluster_selector.value = [self.current_cluster_id]
+        self.cluster_selector.values = (self
+                                        .parentApp
+                                        .kubernetes_api
+                                        .all_clusters)
+        self.cluster_selector.value = [self.parentApp.current_cluster_id]
 
         self.cluster_selector.display()
 
@@ -67,11 +85,10 @@ class MainForm(NosKubeForm):
                                   all_namespaces,
                                   current_namespace,
                                   current_namespace_id):
-        self.all_namespaces = all_namespaces
-        self.current_namespace = current_namespace
-        self.current_namespace_id = current_namespace_id
-
-        self.namespace_selector.values = self.all_namespaces
-        self.namespace_selector.value = [self.current_namespace_id]
+        self.namespace_selector.values = (self
+                                          .parentApp
+                                          .kubernetes_api
+                                          .all_namespaces)
+        self.namespace_selector.value = [self.parentApp.current_namespace_id]
 
         self.namespace_selector.display()

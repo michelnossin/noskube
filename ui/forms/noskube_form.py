@@ -39,19 +39,6 @@ class NosKubeForm(npyscreen.SplitForm):
                                                          kubernetes_api)
                                       .proces_event)
 
-    def read_kubernetes_data(self):
-        kubernetes_api = self.parentApp.kubernetes_api
-
-        self.current_context, self.current_context_id = (
-            kubernetes_api.current_context)
-        self.all_contexts = kubernetes_api.all_contexts
-        self.current_cluster, self.current_cluster_id = (
-            kubernetes_api.current_cluster)
-        self.all_clusters = kubernetes_api.all_clusters
-        self.all_pods = kubernetes_api.all_pods
-        self.all_deployments = kubernetes_api.all_deployments
-        self.all_namespaces = kubernetes_api.all_namespaces
-
     def get_menu_item_color(self, button_name):
         if self.current_form_id == button_name:
             return 'VERYGOOD'
@@ -109,7 +96,6 @@ class NosKubeForm(npyscreen.SplitForm):
         Press ENTER to select an item""")
 
     def create(self):
-        self.read_kubernetes_data()
         self.add_form_components()
 
     def update_status_box(self, value):
